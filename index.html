@@ -39,8 +39,8 @@
       border-radius: 6px;
       border: none;
       margin-top: 5px;
-      width: 100%;
-      max-width: 300px;
+      width: calc(100% + 10px);
+      box-sizing: border-box;
       background-color: #1f1f1f;
       color: #e0e0e0;
       box-shadow: inset 0 0 4px #333;
@@ -81,35 +81,41 @@
       color: #888;
       padding: 20px;
     }
+
+    .hidden {
+      visibility: hidden;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>RBMK-1500 MWt Calculator</h2>
 
-    <p>
-      Electric Demand (MWe 900-1500):<br>
-      <input type="number" id="mwe" min="900" max="1500" step="10" placeholder="1250">
-    </p>
+    <div>
+      <p>
+        Electric Demand (MWe 900-1500):<br>
+        <input type="number" id="mwe" min="900" max="1500" step="10" placeholder="1250">
+      </p>
 
-    <p>
-      Target Relative Efficiency % (100-120):<br>
-      <input type="number" id="relEff" min="100" max="120" step="0.1" value="106" placeholder="106">
-    </p>
+      <p>
+        Target Relative Efficiency % (100-120):<br>
+        <input type="number" id="relEff" min="100" max="120" step="0.1" value="106" placeholder="106">
+      </p>
 
-    <p>
-      Recirc Pump Speed (0-18):<br>
-      <input type="number" id="pump" min="0" max="18" step="1" value="16" placeholder="16">
-    </p>
+      <p>
+        Recirc Pump Speed (0-18):<br>
+        <input type="number" id="pump" min="0" max="18" step="1" value="16" placeholder="16">
+      </p>
 
-    <button onclick="calc()">Calculate</button>
+      <button onclick="calc()">Calculate</button>
+    </div>
 
-    <pre id="result"></pre>
+    <pre id="result" class="hidden"></pre>
     <p id="error"></p>
   </div>
 
   <div class="credits">
-    Credits: m8tyss, Combine_Soldier & raccoon
+    Credits: m8tyss, Combine_Soldier, raccoon & filipo
   </div>
 
   <script>
@@ -117,6 +123,8 @@
     const b = 1.507895;
     const c = -22.646989;
     const d = -8.5;
+
+    let classRemoved = false;
 
     function calc() {
       const mwe  = parseFloat(document.getElementById('mwe').value);
@@ -152,6 +160,10 @@
       const baseMWtMax = a + b * maxTotalMWe + c * eff + d * (pump - 12);
       const MWtMax = Math.ceil(baseMWtMax / 5) * 5;
 
+      if (!classRemoved) {
+        out.classList.remove("hidden");
+        classRemoved = true;
+      }
       out.textContent =
         `Required Thermal Power: ${MWt.toLocaleString()} MWt\n` +
         `Exact Per‑Turbine Demand: ${perTurb.toFixed(1)} MWe\n` +
