@@ -1,81 +1,163 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>RBMK-1500 MWt Calculator (Plain)</title>
+  <title>RBMK-1500 MWt Calculator</title>
   <style>
-    body{background:#fff;color:#000;font-family:Arial,Helvetica,sans-serif;margin:20px;}
-    input,button{font-size:1rem;}
+    body {
+      background-color: #121212;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+    }
+
+    h2 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+      color: #ffffff;
+    }
+
+    p {
+      margin-bottom: 20px;
+    }
+
+    input, button {
+      font-size: 1rem;
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      margin-top: 5px;
+      width: 100%;
+      max-width: 300px;
+      background-color: #1f1f1f;
+      color: #e0e0e0;
+      box-shadow: inset 0 0 4px #333;
+    }
+
+    button {
+      background-color: #333;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #555;
+    }
+
+    pre {
+      background-color: #1b1b1b;
+      color: #e0e0e0;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      font-size: 1rem;
+      white-space: pre-wrap;
+      max-width: 600px;
+      margin: 20px 0;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+
+    #error {
+      color: #ff6b6b;
+      margin-top: 10px;
+    }
+
+    .credits {
+      text-align: right;
+      font-size: 0.9rem;
+      color: #888;
+      padding: 20px;
+    }
   </style>
 </head>
 <body>
-  <h2>RBMK-1500 MWt Calculator</h2>
+  <div class="container">
+    <h2>RBMK-1500 MWt Calculator</h2>
 
-  <p>
-    Electric Demand (MWe 900-1500):<br>
-    <input type="number" id="mwe" min="900" max="1500" step="10" placeholder="1250">
-  </p>
+    <p>
+      Electric Demand (MWe 900-1500):<br>
+      <input type="number" id="mwe" min="900" max="1500" step="10" placeholder="1250">
+    </p>
 
-  <p>
-    Target Relative Efficiency % (100-120):<br>
-    <input type="number" id="relEff" min="100" max="120" step="0.1" value="106" placeholder="106">
-  </p>
+    <p>
+      Target Relative Efficiency % (100-120):<br>
+      <input type="number" id="relEff" min="100" max="120" step="0.1" value="106" placeholder="106">
+    </p>
 
-  <p>
-    Recirc Pump Speed (0-18):<br>
-    <input type="number" id="pump" min="0" max="18" step="1" value="16" placeholder="16">
-  </p>
+    <p>
+      Recirc Pump Speed (0-18):<br>
+      <input type="number" id="pump" min="0" max="18" step="1" value="16" placeholder="16">
+    </p>
 
-  <button onclick="calc()">Calculate</button>
+    <button onclick="calc()">Calculate</button>
 
-  <pre id="result"></pre>
-  <p id="error" style="color:red"></p>
+    <pre id="result"></pre>
+    <p id="error"></p>
+  </div>
 
-<script>
-  // Multi-linear model coefficients
-  const a = 4725.571;   // intercept
-  const b = 1.507895;   // per-MWe term
-  const c = -22.646989; // per-%-eff term
-  const d = -8.5;       // per pump-speed step (0-18 scale)
+  <div class="credits">
+    Credits: m8tyss, Combine_Soldier & raccoon
+  </div>
 
-  function calc(){
-    const mwe  = parseFloat(document.getElementById('mwe').value);
-    const eff  = parseFloat(document.getElementById('relEff').value);
-    const pump = parseFloat(document.getElementById('pump').value);
-    const err  = document.getElementById('error');
-    const out  = document.getElementById('result');
-    err.textContent = out.textContent = '';
+  <script>
+    const a = 4725.571;
+    const b = 1.507895;
+    const c = -22.646989;
+    const d = -8.5;
 
-    // validation
-    if (isNaN(mwe)||isNaN(eff)||isNaN(pump)){err.textContent='Please fill all fields.';return;}
-    if (mwe<900||mwe>1500){err.textContent='MWe must be 900-1500.';return;}
-    if (pump<0||pump>18){err.textContent='Pump speed 0-18.';return;}
+    function calc() {
+      const mwe  = parseFloat(document.getElementById('mwe').value);
+      const eff  = parseFloat(document.getElementById('relEff').value);
+      const pump = parseFloat(document.getElementById('pump').value);
+      const err  = document.getElementById('error');
+      const out  = document.getElementById('result');
+      err.textContent = out.textContent = '';
 
-    // core MWt calculation
-    const baseMWt = a + b*mwe + c*eff + d*(pump-12);
-    const MWt     = Math.ceil(baseMWt/5)*5;
+      if (isNaN(mwe) || isNaN(eff) || isNaN(pump)) {
+        err.textContent = 'Please fill all fields.';
+        return;
+      }
 
-    // turbine calculations with cap
-    const perTurb     = mwe/2;
-    const maxTurbRaw  = perTurb + 12;
-    const maxTurb     = Math.min(maxTurbRaw, 750); // per‑turbine cap
+      if (mwe < 900 || mwe > 1500) {
+        err.textContent = 'MWe must be 900-1500.';
+        return;
+      }
 
-    // max total electric demand based on capped turbine output
-    const maxTotalMWe = maxTurb * 2;
+      if (pump < 0 || pump > 18) {
+        err.textContent = 'Pump speed 0-18.';
+        return;
+      }
 
-    const baseMWtMax = a + b*maxTotalMWe + c*eff + d*(pump-12);
-    const MWtMax     = Math.ceil(baseMWtMax/5)*5;
+      const baseMWt = a + b * mwe + c * eff + d * (pump - 12);
+      const MWt = Math.ceil(baseMWt / 5) * 5;
 
-    out.textContent =
-      `Required Thermal Power: ${MWt.toLocaleString()} MWt\n`+
-      `Exact Per‑Turbine Demand: ${perTurb.toFixed(1)} MWe\n`+
-      `Max Turbine Demand (+12, capped at 750): ${maxTurb.toFixed(1)} MWe\n`+
-      `Max Thermal Power (Scaled to capped turbine): ${MWtMax.toLocaleString()} MWt`;
-  }
-</script>
+      const perTurb = mwe / 2;
+      const maxTurbRaw = perTurb + 12;
+      const maxTurb = Math.min(maxTurbRaw, 750);
+      const maxTotalMWe = maxTurb * 2;
 
-  <p style="margin-top:2rem;font-size:0.9rem;text-align:center;">
-    Credits: m8tyss &amp; Combine_Soldier
-  </p>
+      const baseMWtMax = a + b * maxTotalMWe + c * eff + d * (pump - 12);
+      const MWtMax = Math.ceil(baseMWtMax / 5) * 5;
+
+      out.textContent =
+        `Required Thermal Power: ${MWt.toLocaleString()} MWt\n` +
+        `Exact Per‑Turbine Demand: ${perTurb.toFixed(1)} MWe\n` +
+        `Max Turbine Demand (+12, capped at 750): ${maxTurb.toFixed(1)} MWe\n` +
+        `Max Thermal Power (Scaled to capped turbine): ${MWtMax.toLocaleString()} MWt`;
+    }
+  </script>
 </body>
 </html>
